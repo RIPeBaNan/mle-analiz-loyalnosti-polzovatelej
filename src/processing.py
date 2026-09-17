@@ -42,6 +42,15 @@ class DataProcessor:
         df_csv['nominal'] = df_csv['nominal'].astype('int8')
         df_csv = df_csv.rename(columns = {'data': 'order_dt'})
 
+        # Приводим к нижнему регистру и убираем лишние пробелы в столбцах event_type_main и service_name
+        # для поиска неявных дубликатов
+        df_sql['event_type_main'] = df_sql['event_type_main'].str.lower().str.strip()
+        df_sql['service_name'] = df_sql['service_name'].str.lower().str.strip()
+
+        # Убираем дубликаты в df_sql
+        subset_cols = [col for col in df_sql.columns if col not in ['order_id']]
+        df_sql = df_sql.drop_duplicates(subset = subset_cols, keep = 'first')
+
         # Объединяем датафрейм df_sql и df_csv
         df_sql = df_sql.merge(df_csv, on = 'order_dt', how = 'left')
         df_sql['revenue_rub'] = df_sql['revenue']
